@@ -1,0 +1,127 @@
+version: '3.9'
+
+services:
+    laravel.test:
+        build:
+            context: ./vendor/laravel/sail/runtimes/8.5
+            dockerfile: Dockerfile
+            args:
+                WWWGROUP: ${WWWGROUP}
+        image: sail-8.5/app
+        container_name: laravel_app
+        extra_hosts:
+            - host.docker.internal:host-gateway
+        ports:
+            - "${APP_PORT:-80}:80"
+            - "${VITE_PORT:-5173}:${VITE_PORT:-5173}"
+        environment:
+            WWWUSER: ${WWWUSER}
+            LARAVEL_SAIL: 1
+        volumes:
+            - .:/var/www/html
+        depends_on:
+            - postgres
+            - mailpit
+        networks:
+            - sail
+
+    postgres:
+        image: postgres:16
+        container_name: postgres_db
+        ports:
+            - "5433:5432"
+        environment:
+            POSTGRES_DB: ${DB_DATABASE}
+            POSTGRES_USER: ${DB_USERNAME}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+        volumes:
+            - sail-postgres:/var/lib/postgresql/data
+        healthcheck:
+            test: [ "CMD", "pg_isready", "-q", "-d", "${DB_DATABASE}", "-U", "${DB_USERNAME}" ]
+            retries: 3
+            timeout: 5s
+        networks:
+            - sail
+
+    mailpit:
+        image: axllent/mailpit:latest
+        container_name: mailpit
+        ports:
+            - "${FORWARD_MAILPIT_PORT:-1025}:1025"
+            - "${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025"
+        networks:
+            - sail
+
+    queue_emails:
+        image: sail-8.5/app
+        container_name: laravel_queue_emails
+        command: php artisan queue:work --queue=emails --verbose
+        env_file:
+            - .env
+        depends_on:
+            postgres:
+                condition: service_healthy
+            mailpit:
+                condition: service_started
+        volumes:
+            - .:/var/www/html
+        networks:
+            - sail
+    queue_ollama_validate:
+        image: sail-8.5/app
+        container_name: laravel_queue_ollama_validate
+        command: php artisan queue:work --queue=ollama_validate --verbose
+        env_file:
+            - .env
+        depends_on:
+            - postgres
+        volumes:
+            - .:/var/www/html
+        networks:
+            - sail
+    queue_ollama_response:
+        image: sail-8.5/app
+        container_name: laravel_queue_ollama_response
+        command: php artisan queue:work --queue=ollama_response --verbose --tries=3 --timeout=120
+        env_file:
+            - .env
+        depends_on:
+            - postgres
+        volumes:
+            - .:/var/www/html
+        networks:
+            - sail
+    scheduler:
+        image: sail-8.5/app
+        container_name: laravel_scheduler
+        command: php artisan schedule:work
+        env_file:
+            - .env
+        depends_on:
+            - postgres
+            - mailpit
+        volumes:
+            - .:/var/www/html
+        networks:
+            - sail
+
+    ollama:
+        image: ollama/ollama:latest
+        container_name: ollama
+        ports:
+            - "11434:11434"
+        volumes:
+            - ollama_data:/root/.ollama
+        restart: unless-stopped
+        networks:
+            - sail
+
+networks:
+    sail:
+        driver: bridge
+
+volumes:
+    sail-postgres:
+        driver: local
+    ollama_data:
+        driver: local
