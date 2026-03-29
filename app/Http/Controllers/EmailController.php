@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\SendEmailRequest;
-use App\Services\EmailService;
 use App\Contracts\EmailServiceInterface;
+use App\DTO\EmailFilterDto;
+use App\Http\Requests\GetEmailsRequest;
+use App\Http\Requests\SendEmailRequest;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Http\Request;
 
 class EmailController extends Controller
 {
@@ -15,46 +16,30 @@ class EmailController extends Controller
     ) {}
 
 
-    public function sendEmail(SendEmailRequest $request)
+    public function sendEmail(SendEmailRequest $request): JsonResponse
     {
         Log::info('Incoming send email request', [
             'payload' => $request->validated()
         ]);
 
-        try {
-            $data = $request->toDto();
+        $data = $request->toDto();
+        $email = $this->emailService->create($data);
 
-            $email = $this->emailService->create($data);
-
-            return response()->json([
-                'message' => 'Email queued for sending',
-                'email_id' => $email->id
-            ], 201);
-        } catch (\Throwable $e) {
-
-            Log::error('Email creation failed', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json([
-                'error' => 'Internal server error'
-            ], 500);
-        }
+        return response()->json([
+            'message' => 'Email queued for sending',
+            'email_id' => $email->id
+        ], 201);
     }
 
-    public function getEmails(Request $request, EmailService $emailService)
+    public function getEmails(GetEmailsRequest $request): JsonResponse
     {
-        try {
-            $result = $emailService->getAll($request);
-            return response()->json($result->toArray());
-        } catch (\Throwable $e) {
-            Log::error('Failed to fetch emails', [
-                'message' => $e->getMessage()
-            ]);
-            return response()->json([
-                'error' => 'Internal server error'
-            ], 500);
-        }
+        Log::info('Incoming get emails request', [
+            'query' => $request->query()
+        ]);
+
+        $filterDto = EmailFilterDto::fromArray($request->validated());
+        $result = $this->emailService->getAll($filterDto);
+
+        return response()->json($result->toArray());
     }
 }

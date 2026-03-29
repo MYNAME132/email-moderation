@@ -2,49 +2,40 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Email;
-use App\DTO\SuggestedResponseDto;
-use Symfony\Component\HttpFoundation\Request;
-use App\DTO\PaginationDto;
+use App\Contracts\SuggestedResponseServiceInterface;
+use App\Http\Requests\GetSuggestedResponsesRequest;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
 
+
 class SuggestedResponseController extends Controller
 {
-    public function index(Request $request, string $emailId): JsonResponse
+    public function __construct(
+        private SuggestedResponseServiceInterface $suggestedResponseService
+    ) {}
+
+    public function getSuggestedResponses(GetSuggestedResponsesRequest $request): JsonResponse
     {
-        Log::info('suggested responses ', [$emailId]);
-        $perPage = $request->get('per_page', 5);
+        $emailId = $request->getEmailId();
 
-        $email = Email::find($emailId);
-
-        if (!$email) {
-            return response()->json([
-                'message' => 'Email not found'
-            ], 404);
-        }
-
-        $responses = $email->suggestedResponses()
-            ->orderBy('created_at', 'desc')
-            ->paginate($perPage);
-
-        $dtoCollection = array_map(
-            fn($response) => SuggestedResponseDto::fromModel($response)->toArray(),
-            $responses->items()
-        );
-
-        $paginationDto = new PaginationDto(
-            data: $dtoCollection,
-            currentPage: $responses->currentPage(),
-            lastPage: $responses->lastPage(),
-            perPage: $responses->perPage(),
-            total: $responses->total()
-        );
-
-        return response()->json([
-            'email_id' => $email->id,
-            'suggested_responses' => $paginationDto->toArray()
+        Log::info('Incoming get suggested responses request', [
+            'email_id' => $emailId,
         ]);
+
+        $result = $this->suggestedResponseService->getByEmail($emailId, $request);
+
+        return response()->json($result->toArray());
+    }
+
+    public function selectResponse(string $responseId): JsonResponse
+    {
+        Log::info('Selecting suggested response', [
+            'response_id' => $responseId
+        ]);
+
+        $result = $this->suggestedResponseService->selectResponse($responseId);
+
+        return response()->json($result);
     }
 }

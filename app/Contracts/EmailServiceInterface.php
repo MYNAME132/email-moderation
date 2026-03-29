@@ -4,11 +4,11 @@ namespace App\Contracts;
 
 use App\DTO\PaginationDto;
 use App\Models\Email;
-use Illuminate\Http\Request;
+use App\DTO\EmailFilterDto;
 
 interface EmailServiceInterface
 {
     public function create(array $data): Email;
 
-    public function getAll(?Request $request = null, int $perPage = 5): PaginationDto;
+    public function getAll(EmailFilterDto $filter = null): PaginationDto;
 }

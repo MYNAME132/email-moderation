@@ -6,8 +6,8 @@ use App\Enums\StatusEnum;
 use App\Contracts\EmailServiceInterface;
 use App\Models\Email as EmailModel;
 use App\DTO\EmailDto;
+use App\DTO\EmailFilterDto;
 use App\DTO\PaginationDto;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class EmailService implements EmailServiceInterface
@@ -32,26 +32,25 @@ class EmailService implements EmailServiceInterface
         return $email;
     }
 
-    public function getAll(?Request $request = null, int $perPage = 5): PaginationDto
+    public function getAll(?EmailFilterDto $filter = null): PaginationDto
     {
         $query = EmailModel::with(['links', 'document']);
 
-        if ($request) {
-            if ($request->filled('response_decision')) {
-                $query->where('response_decision', $request->response_decision);
-            }
+        if ($filter?->response_decision) {
+            $query->where('response_decision', $filter->response_decision);
+        }
 
-            if ($request->filled('sender')) {
-                $query->where('sender', 'ILIKE', '%' . $request->sender . '%');
-            }
+        if ($filter?->sender) {
+            $query->where('sender', 'ILIKE', '%' . $filter->sender . '%');
+        }
 
-            if ($request->filled('subject')) {
-                $query->where('subject', 'ILIKE', '%' . $request->subject . '%');
-            }
+        if ($filter?->subject) {
+            $query->where('subject', 'ILIKE', '%' . $filter->subject . '%');
         }
 
         $query->latest();
 
+        $perPage = $filter?->per_page ?? 5;
         $emails = $query->paginate($perPage);
 
         $data = collect($emails->items())
