@@ -13,6 +13,8 @@ class Kernel extends ConsoleKernel
         Log::info('Kernel schedule() called');
 
         $schedule->job(new \App\Jobs\FetchEmailsJob)->everyMinute();
+
+        $schedule->job(new \App\Jobs\DispatchPendingEmailsJob)->everyMinute();
     }
 
     protected function commands()
