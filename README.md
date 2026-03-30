@@ -93,6 +93,17 @@ graph TD
     Emails --> SuggestedResponses
 ```
 
+## Documentation
+
+Detailed project documentation is available in the [`docs/`](docs/) folder.
+
+- **architecture.md** — system architecture, job pipeline, and controller
+  structure
+- **database.md** — full database schema, tables, and relationships
+- **future_planning.md** — planned improvements and roadmap
+
+Open the files in the `docs/` folder for detailed information about the project.
+
 ```
 ```
 
