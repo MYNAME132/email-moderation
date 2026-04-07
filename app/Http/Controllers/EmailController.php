@@ -42,4 +42,13 @@ class EmailController extends Controller
 
         return response()->json($result->toArray());
     }
+
+    public function sendEmailById(string $emailId): JsonResponse
+    {
+        Log::info('Incoming dispatch email request', ['email_id' => $emailId]);
+
+        $this->emailService->sendEmail($emailId);
+
+        return response()->json(['message' => 'Email sent successfully']);
+    }
 }

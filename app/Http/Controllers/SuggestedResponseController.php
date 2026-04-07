@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Contracts\SuggestedResponseServiceInterface;
 use App\Http\Requests\GetSuggestedResponsesRequest;
+use App\Http\Requests\UpdateSuggestedResponseRequest;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
@@ -26,6 +27,17 @@ class SuggestedResponseController extends Controller
         $result = $this->suggestedResponseService->getByEmail($emailId, $request);
 
         return response()->json($result->toArray());
+    }
+
+    public function updateResponse(UpdateSuggestedResponseRequest $request, string $responseId): JsonResponse
+    {
+        Log::info('Updating suggested response content', [
+            'response_id' => $responseId,
+        ]);
+
+        $result = $this->suggestedResponseService->updateContent($responseId, $request->validated('content'));
+
+        return response()->json($result);
     }
 
     public function selectResponse(string $responseId): JsonResponse

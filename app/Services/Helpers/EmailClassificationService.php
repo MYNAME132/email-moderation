@@ -2,11 +2,16 @@
 
 namespace App\Services\Helpers;
 
+use App\Models\BlockedDomain;
+use App\Models\ClassificationKeyword;
 use App\Models\Email;
 use App\Enums\ResponseDecisionEnum;
+use Illuminate\Support\Facades\Cache;
 
 class EmailClassificationService
 {
+    private const CACHE_TTL = 3600;
+
     public function classify(
         Email $email,
     ): ResponseDecisionEnum {
@@ -45,11 +50,11 @@ class EmailClassificationService
     {
         $domain = $this->extractDomain($sender);
 
-        $blocked = [
-            //'linkedin.com',
-            'codecademy.com',
-            'greenhouse.io',
-        ]; // can be add to admin dashbord or smth like this will work as well
+        $blocked = Cache::remember(
+            'classification.blocked_domains',
+            self::CACHE_TTL,
+            fn() => BlockedDomain::pluck('domain')->all(),
+        );
 
         foreach ($blocked as $blockedDomain) {
             if (str_contains($domain, $blockedDomain)) {
@@ -66,14 +71,11 @@ class EmailClassificationService
 
         $subject = strtolower($subject);
 
-        $keywords = [
-            'notification',
-            'newsletter',
-            'update',
-            'policy',
-            'privacy',
-            'digest',
-        ];
+        $keywords = Cache::remember(
+            'classification.subject_keywords',
+            self::CACHE_TTL,
+            fn() => ClassificationKeyword::where('type', 'subject')->pluck('keyword')->all(),
+        );
 
         foreach ($keywords as $keyword) {
             if (str_contains($subject, $keyword)) {
@@ -108,13 +110,11 @@ class EmailClassificationService
 
         $body = strtolower($body);
 
-        $keywords = [
-            'unsubscribe',
-            'manage preferences',
-            'privacy policy',
-            'email settings',
-            'manage my consent',
-        ];
+        $keywords = Cache::remember(
+            'classification.body_keywords',
+            self::CACHE_TTL,
+            fn() => ClassificationKeyword::where('type', 'body')->pluck('keyword')->all(),
+        );
 
         foreach ($keywords as $keyword) {
             if (str_contains($body, $keyword)) {

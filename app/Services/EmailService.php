@@ -9,6 +9,7 @@ use App\DTO\EmailDto;
 use App\DTO\EmailFilterDto;
 use App\DTO\PaginationDto;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class EmailService implements EmailServiceInterface
 {
@@ -64,5 +65,43 @@ class EmailService implements EmailServiceInterface
             perPage: $emails->perPage(),
             total: $emails->total()
         );
+    }
+
+    public function sendEmail(string $emailId): void
+    {
+        $email = EmailModel::with(['document', 'selectedResponse'])->find($emailId);
+
+        if (!$email) {
+            throw new \RuntimeException("Email not found: {$emailId}");
+        }
+
+        $selectedResponse = $email->selectedResponse;
+        $body = $selectedResponse
+            ? $selectedResponse->content
+            : ($email->document?->body['text'] ?? '');
+
+        Mail::raw($body, function ($message) use ($email) {
+
+            $fromEmail = $this->extractEmail($email->sender);
+            $toEmail = $this->extractEmail($email->receiver);
+
+            $message
+                ->from($fromEmail)
+                ->to($toEmail)
+                ->subject($email->subject ?? '(no subject)');
+        });
+
+        $email->update(['status' => StatusEnum::SENT]);
+
+        Log::info('Email sent via SMTP', ['email_id' => $email->id]);
+    }
+
+    private function extractEmail(string $value): string
+    {
+        if (preg_match('/<(.+?)>/', $value, $matches)) {
+            return $matches[1];
+        }
+
+        return $value;
     }
 }

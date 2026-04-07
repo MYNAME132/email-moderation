@@ -82,7 +82,7 @@ class GenerateSuggestedResponsesJob implements ShouldQueue
             }
 
             $email->update([
-                'status' => StatusEnum::SENT
+                'status' => StatusEnum::READY_TO_SEND
             ]);
 
             Log::info('Suggested responses created', [

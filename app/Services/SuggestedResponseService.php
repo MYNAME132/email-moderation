@@ -16,6 +16,7 @@ class SuggestedResponseService implements SuggestedResponseServiceInterface
     {
         $perPage = $request->get('per_page', 5);
 
+
         $email = Email::findOrFail($emailId);
 
         $responses = $email->suggestedResponses()
@@ -34,6 +35,19 @@ class SuggestedResponseService implements SuggestedResponseServiceInterface
             perPage: $responses->perPage(),
             total: $responses->total()
         );
+    }
+
+    public function updateContent(string $responseId, string $content): array
+    {
+        $response = SuggestedResponse::findOrFail($responseId);
+
+        $response->update(['content' => $content]);
+
+        return [
+            'message' => 'Suggested response updated successfully',
+            'id' => $responseId,
+            'content' => $content,
+        ];
     }
 
     public function selectResponse(string $responseId): array

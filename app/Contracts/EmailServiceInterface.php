@@ -11,4 +11,6 @@ interface EmailServiceInterface
     public function create(array $data): Email;
 
     public function getAll(EmailFilterDto $filter = null): PaginationDto;
+
+    public function sendEmail(string $emailId): void;
 }

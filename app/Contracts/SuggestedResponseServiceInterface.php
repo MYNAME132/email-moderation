@@ -9,4 +9,5 @@ interface SuggestedResponseServiceInterface
 {
     public function getByEmail(string $emailId, Request $request): PaginationDto;
     public function selectResponse(string $responseId): array;
+    public function updateContent(string $responseId, string $content): array;
 }
