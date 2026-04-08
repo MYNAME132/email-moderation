@@ -6,7 +6,6 @@
 .phpactor.json
 .phpunit.result.cache
 .claude
-CLAUDE.md
 /.fleet
 /.idea
 /.nova
@@ -21,6 +20,9 @@ CLAUDE.md
 /storage/*.key
 /storage/pail
 /vendor
+CLAUDE.md
 Homestead.json
 Homestead.yaml
 Thumbs.db
+run_approved_plan.sh
+

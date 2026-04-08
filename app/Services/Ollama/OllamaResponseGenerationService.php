@@ -44,6 +44,32 @@ class OllamaResponseGenerationService implements OllamaResponseGenerationService
         return $this->parseResponses($raw);
     }
 
+    public function generateFromPrompt(string $prompt, string $emailContent): array
+    {
+        Log::info('Direct prompt injection triggered');
+
+        $combined = "
+            You are an email assistant.
+
+            Here is the email the user is responding to:
+            {$emailContent}
+
+            The user's instruction:
+            {$prompt}
+
+            Write a reply based on the user's instruction above.
+            Rules:
+            - Be polite and professional
+            - No explanations, just the reply
+        ";
+
+        $raw = $this->ollama->generate($combined);
+
+        Log::info('Raw AI response from direct prompt', ['response' => $raw]);
+
+        return $this->parseResponses($raw);
+    }
+
     private function parseResponses(string $raw): array
     {
         $lines = preg_split("/\r\n|\n|\r/", $raw);

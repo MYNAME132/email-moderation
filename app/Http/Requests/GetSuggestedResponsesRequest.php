@@ -2,31 +2,6 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\EmailIdBaseRequest;
 
-class GetSuggestedResponsesRequest extends FormRequest
-{
-    public function authorize(): bool
-    {
-        return true;
-    }
-
-    protected function prepareForValidation()
-    {
-        $this->merge([
-            'emailId' => $this->route('emailId')
-        ]);
-    }
-
-    public function rules(): array
-    {
-        return [
-            'emailId' => ['required', 'uuid', 'exists:emails,id'],
-        ];
-    }
-
-    public function getEmailId(): string
-    {
-        return $this->route('emailId');
-    }
-}
+class GetSuggestedResponsesRequest extends EmailIdBaseRequest {}

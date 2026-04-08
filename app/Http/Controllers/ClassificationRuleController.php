@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 class ClassificationRuleController extends Controller
 {
 
-    public function indexBlockedDomains(): JsonResponse
+    public function getBlockedDomains(): JsonResponse
     {
         return response()->json(BlockedDomain::get(['id', 'domain', 'created_at']));
     }
@@ -26,7 +26,7 @@ class ClassificationRuleController extends Controller
         return response()->json($domain, 201);
     }
 
-    public function destroyBlockedDomain(string $id): JsonResponse
+    public function deleteBlockedDomain(string $id): JsonResponse
     {
         $domain = BlockedDomain::findOrFail($id);
 
@@ -37,7 +37,7 @@ class ClassificationRuleController extends Controller
         return response()->json(['message' => 'Blocked domain removed']);
     }
 
-    public function indexKeywords(): JsonResponse
+    public function getKeywords(): JsonResponse
     {
         return response()->json(ClassificationKeyword::get(['id', 'keyword', 'type', 'created_at']));
     }
@@ -55,7 +55,7 @@ class ClassificationRuleController extends Controller
         return response()->json($keyword, $status);
     }
 
-    public function destroyKeyword(string $id): JsonResponse
+    public function deleteKeyword(string $id): JsonResponse
     {
         $keyword = ClassificationKeyword::findOrFail($id);
 

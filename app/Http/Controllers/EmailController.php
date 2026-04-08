@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Contracts\EmailServiceInterface;
 use App\DTO\EmailFilterDto;
+use App\Http\Requests\CreateEmailRequest;
 use App\Http\Requests\GetEmailsRequest;
 use App\Http\Requests\SendEmailRequest;
 use Illuminate\Http\JsonResponse;
@@ -16,7 +17,7 @@ class EmailController extends Controller
     ) {}
 
 
-    public function sendEmail(SendEmailRequest $request): JsonResponse
+    public function sendEmail(CreateEmailRequest $request): JsonResponse
     {
         Log::info('Incoming send email request', [
             'payload' => $request->validated()
@@ -43,9 +44,13 @@ class EmailController extends Controller
         return response()->json($result->toArray());
     }
 
-    public function sendEmailById(string $emailId): JsonResponse
+    public function sendEmailById(SendEmailRequest $request): JsonResponse
     {
-        Log::info('Incoming dispatch email request', ['email_id' => $emailId]);
+        $emailId = $request->getEmailId();
+
+        Log::info('Incoming dispatch email request', [
+            'email_id' => $emailId,
+        ]);
 
         $this->emailService->sendEmail($emailId);
 
